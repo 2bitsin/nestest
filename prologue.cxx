@@ -8,17 +8,20 @@ using qword = std::uint64_t;
 
 struct LogLine
 {  
-  byte opbytes[3u];    
-  const char* symbolic;
-  struct 
-  { 
-    word pc;
-    byte a, x, y, p, sp;
-  } regs;
+  word addr;
+  struct { byte a, x, y, p, sp; } regs;
 
-  qword ppuclock;
+  byte nbytes;
+  byte opbytes[3u];    
+
+  qword column;
   qword scanline;
   qword cpuclock;
+  qword ppuclock;
+
+  bool unofficial;
+  const char* instruction;
+  const char* disassembly;
 };
 
 
