@@ -45,9 +45,9 @@ logData = logData.filter(x => x.trim() != '').map((line) =>
 
 fs.writeFileSync('nestest.log.json', JSON.stringify(logData, null, 4));
 
-
 let hex = (value, bits) => `0x${value.toString(16).toUpperCase().padStart(bits/4, '0')}`;
 let pad = (value, chrs, wot) => value.toString().padStart(chrs, wot);
+
 let cxxSource = [];
 for(let line of logData)
 {  
@@ -78,3 +78,13 @@ for(let line of logData)
 cxxSource = [cxxPrologue, cxxSource.join(',\n'), cxxEpilogue].join('\n');
 
 fs.writeFileSync('nestest.cxx', cxxSource);
+
+let romData = fs.readFileSync('nestest.nes');
+
+romData = [...romData]
+
+console.assert(JSON.stringify(romData.slice(0, 4)) == JSON.stringify([78,69,83,26]));
+
+debugger;
+
+
