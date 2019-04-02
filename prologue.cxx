@@ -23,7 +23,3 @@ struct LogLine
   const char* instruction;
   const char* disassembly;
 };
-
-
-LogLine logNestest [] =
-{

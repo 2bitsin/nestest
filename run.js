@@ -48,7 +48,7 @@ fs.writeFileSync('nestest.log.json', JSON.stringify(logData, null, 4));
 let hex = (value, bits) => `0x${value.toString(16).toUpperCase().padStart(bits/4, '0')}`;
 let pad = (value, chrs, wot) => value.toString().padStart(chrs, wot);
 
-let cxxSource = [];
+let cxxSource = ['LogLine logNestest [] =', '{'];
 for(let line of logData)
 {  
   cxxSource.push(
@@ -72,19 +72,58 @@ for(let line of logData)
     `${line.unofficial ? 'true' : 'false'}, `+
     `"${line.text.disassembly}", `+
     `${line.text.annotation ? ('"' + line.text.annotation + '"') : 'nullptr'}`+    
-    `}`);
+    `},`);
 }
-
-cxxSource = [cxxPrologue, cxxSource.join(',\n'), cxxEpilogue].join('\n');
-
-fs.writeFileSync('nestest.cxx', cxxSource);
+cxxSource.push('};');
 
 let romData = fs.readFileSync('nestest.nes');
 
 romData = [...romData]
+header = romData.splice(0, 16)
+signature = header.slice(0, 4)
 
-console.assert(JSON.stringify(romData.slice(0, 4)) == JSON.stringify([78,69,83,26]));
+console.assert(JSON.stringify(signature) == JSON.stringify([78,69,83,26]));
 
-debugger;
+prgRomSize = 1024*16*header[4]
+chrRomSize = 1024*8*header[5]
 
+console.assert(prgRomSize + chrRomSize == romData.length)
+prgRom = romData.splice(0, prgRomSize)
+chrRom = romData.splice(0, chrRomSize)
+
+cxxSource.push(`const byte prgrom [${prgRomSize}] =`)
+cxxSource.push(`{`)
+while (prgRom.length)
+{
+  line = prgRom.splice(0, 16)
+  line = ('\t' + line.map(x => `${hex(x, 8)},`).join (' '))
+  cxxSource.push(line)
+}
+cxxSource.push(`};`)
+
+
+cxxSource.push(`const byte chrrom [${chrRomSize}] =`)
+cxxSource.push(`{`)
+while (chrRom.length)
+{
+  line = chrRom.splice(0, 16)
+  line = ('\t' + line.map(x => `${hex(x, 8)},`).join (' '))
+  cxxSource.push(line)
+}
+cxxSource.push(`};`)
+
+cxxSource.push(`const byte header [16] =`)
+cxxSource.push(`{`)
+while (header.length)
+{
+  line = header.splice(0, 16)
+  line = ('\t' + line.map(x => `${hex(x, 8)},`).join (' '))
+  cxxSource.push(line)
+}
+cxxSource.push(`};`)
+
+
+cxxSource = [cxxPrologue, cxxSource.join('\n'), cxxEpilogue].join('\n');
+
+fs.writeFileSync('nestest.cxx', cxxSource);
 
